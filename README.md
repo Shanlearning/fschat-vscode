@@ -1,4 +1,6 @@
-# CodeShell VSCode Extension
+# Fastchat VSCode Extension
+
+使用基于fastchat-openai api接口的 codeshell-vscode插件
 
 [![English readme](https://img.shields.io/badge/README-English-blue)](README_EN.md)
 
@@ -24,97 +26,25 @@ npm exec vsce package
 然后会得到一个名为`codeshell-vscode-${VERSION_NAME}.vsix`的文件。
 
 ##  模型服务
+fastchat 开源架构，自行选择模型 https://github.com/lm-sys/FastChat:
 
-[`llama_cpp_for_codeshell`](https://github.com/WisdomShell/llama_cpp_for_codeshell)项目提供[CodeShell大模型](https://github.com/WisdomShell/codeshell) 4bits量化后的模型，模型名称为`codeshell-chat-q4_0.gguf`。以下为部署模型服务步骤：
+这里以千问14B为例：
+python -m fastchat.serve.controller --host 0.0.0.0 --port 21001 --dispatch-method shortest_queue
+python -m fastchat.serve.model_worker --host 0.0.0.0 --port 20001 --worker-address http://127.0.0.1:20001 --controller-address http://127.0.0.1:21001 --num-gpus 2 --gpu 0,1 --device cuda --model-path /llm_models/Qwen-14B-Chat
+python -m fastchat.serve.controller --host 0.0.0.0 --port 80 --dispatch-method shortest_queue
+python -m fastchat.serve.openai_api_server --host 0.0.0.0 --port 80 --controller-address http://127.0.0.1:21001
 
-### 编译代码
-
-+ Linux / Mac(Apple Silicon设备)
-
-  ```bash
-  git clone https://github.com/WisdomShell/llama_cpp_for_codeshell.git
-  cd llama_cpp_for_codeshell
-  make
-  ```
-
-  在 macOS 上，默认情况下启用了Metal，启用Metal可以将模型加载到 GPU 上运行，从而显著提升性能。
-
-+ Mac(非Apple Silicon设备)
-
-  ```bash
-  git clone https://github.com/WisdomShell/llama_cpp_for_codeshell.git
-  cd llama_cpp_for_codeshell
-  LLAMA_NO_METAL=1 make
-  ```
-
-  对于非 Apple Silicon 芯片的 Mac 用户，在编译时可以使用 `LLAMA_NO_METAL=1` 或 `LLAMA_METAL=OFF` 的 CMake 选项来禁用Metal构建，从而使模型正常运行。
-
-+ Windows
-
-  您可以选择在[Windows Subsystem for Linux](https://learn.microsoft.com/en-us/windows/wsl/about)中按照Linux的方法编译代码，也可以选择参考[llama.cpp仓库](https://github.com/ggerganov/llama.cpp#build)中的方法，配置好[w64devkit](https://github.com/skeeto/w64devkit/releases)后再按照Linux的方法编译。
-
-### 下载模型
-
-在[Hugging Face Hub](https://huggingface.co/WisdomShell)上，我们提供了三种不同的模型，分别是[CodeShell-7B](https://huggingface.co/WisdomShell/CodeShell-7B)、[CodeShell-7B-Chat](https://huggingface.co/WisdomShell/CodeShell-7B-Chat)和[CodeShell-7B-Chat-int4](https://huggingface.co/WisdomShell/CodeShell-7B-Chat-int4)。以下是下载模型的步骤。
-
-- 使用[CodeShell-7B-Chat-int4](https://huggingface.co/WisdomShell/CodeShell-7B-Chat-int4)模型推理，将模型下载到本地后并放置在以上代码中的 `llama_cpp_for_codeshell/models` 文件夹的路径
-
- ```
- git clone https://huggingface.co/WisdomShell/CodeShell-7B-Chat-int4/blob/main/codeshell-chat-q4_0.gguf
- ```
-
-- 使用[CodeShell-7B](https://huggingface.co/WisdomShell/CodeShell-7B)、[CodeShell-7B-Chat](https://huggingface.co/WisdomShell/CodeShell-7B-Chat)推理，将模型放置在本地文件夹后，使用[TGI](https://github.com/WisdomShell/text-generation-inference.git)加载本地模型，启动模型服务
-
-```bash
-git clone https://huggingface.co/WisdomShell/CodeShell-7B-Chat
-git clone https://huggingface.co/WisdomShell/CodeShell-7B
-```
-
-### 加载模型
-
-- `CodeShell-7B-Chat-int4`模型使用`llama_cpp_for_codeshell`项目中的`server`命令即可提供API服务
-
-```bash
-./server -m ./models/codeshell-chat-q4_0.gguf --host 127.0.0.1 --port 8080
-```
-
-注意：对于编译时启用了 Metal 的情况下，若运行时出现异常，您也可以在命令行添加参数 `-ngl 0 `显式地禁用Metal GPU推理，从而使模型正常运行。
-
-- [CodeShell-7B](https://huggingface.co/WisdomShell/CodeShell-7B)和[CodeShell-7B-Chat](https://huggingface.co/WisdomShell/CodeShell-7B-Chat)模型，使用[TGI](https://github.com/WisdomShell/text-generation-inference.git)加载本地模型，启动模型服务
-
-## 模型服务[NVIDIA GPU]
-
-对于希望使用NVIDIA GPU进行推理的用户，可以使用[`text-generation-inference`](https://github.com/huggingface/text-generation-inference)项目部署[CodeShell大模型](https://github.com/WisdomShell/codeshell)。以下为部署模型服务步骤：
-
-### 下载模型
-
-在 [Hugging Face Hub](https://huggingface.co/WisdomShell/CodeShell-7B-Chat)将模型下载到本地后，将模型放置在 `$HOME/models` 文件夹的路径下，即可从本地加载模型。
-
-```bash
-git clone https://huggingface.co/WisdomShell/CodeShell-7B-Chat
-```
-
-### 部署模型
-
-使用以下命令即可用text-generation-inference进行GPU加速推理部署：
-
-```bash
-docker run --gpus 'all' --shm-size 1g -p 9090:80 -v $HOME/models:/data \
-        --env LOG_LEVEL="info,text_generation_router=debug" \
-        ghcr.nju.edu.cn/huggingface/text-generation-inference:1.0.3 \
-        --model-id /data/CodeShell-7B-Chat --num-shard 1 \
-        --max-total-tokens 5000 --max-input-length 4096 \
-        --max-stop-sequences 12 --trust-remote-code
-```
-
-更详细的参数说明请参考[text-generation-inference项目文档](https://github.com/huggingface/text-generation-inference)。
-
+##  模型环境：
+docker network create --driver bridge --subnet 172.20.1.0/16 --gateway 172.20.1.0 llm-net
+docker run --entrypoint /bin/bash --gpus 'all' --name=Qwen-14B-Chat --shm-size 1g --net llm-net -p 80:80 -it ghcr.nju.edu.cn/huggingface/text-generation-inference:1.0.3 
+pip install uvicorn anyio starlette fastapi sse_starlette transformers_stream_generator tiktoken -i http://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com
+pip install --use-pep517 fschat -i http://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com
 
 ## 配置插件
 
 VSCode中执行`Install from VSIX...`命令，选择`codeshell-vscode-${VERSION_NAME}.vsix`，完成插件安装。
 
-- 设置CodeShell大模型服务地址
+- 设置fastchat模型类别
 - 配置是否自动触发代码补全建议
 - 配置自动触发代码补全建议的时间延迟
 - 配置补全的最大tokens数量

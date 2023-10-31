@@ -30,14 +30,20 @@ fastchat 开源架构，自行选择模型 https://github.com/lm-sys/FastChat:
 
 这里以千问14B为例：
 python -m fastchat.serve.controller --host 0.0.0.0 --port 21001 --dispatch-method shortest_queue
+
 python -m fastchat.serve.model_worker --host 0.0.0.0 --port 20001 --worker-address http://127.0.0.1:20001 --controller-address http://127.0.0.1:21001 --num-gpus 2 --gpu 0,1 --device cuda --model-path /llm_models/Qwen-14B-Chat
+
 python -m fastchat.serve.controller --host 0.0.0.0 --port 80 --dispatch-method shortest_queue
+
 python -m fastchat.serve.openai_api_server --host 0.0.0.0 --port 80 --controller-address http://127.0.0.1:21001
 
 ##  模型环境：
 docker network create --driver bridge --subnet 172.20.1.0/16 --gateway 172.20.1.0 llm-net
+
 docker run --entrypoint /bin/bash --gpus 'all' --name=Qwen-14B-Chat --shm-size 1g --net llm-net -p 80:80 -it ghcr.nju.edu.cn/huggingface/text-generation-inference:1.0.3 
+
 pip install uvicorn anyio starlette fastapi sse_starlette transformers_stream_generator tiktoken -i http://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com
+
 pip install --use-pep517 fschat -i http://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com
 
 ## 配置插件

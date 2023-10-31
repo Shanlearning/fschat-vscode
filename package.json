@@ -31,16 +31,16 @@
       "properties": {
         "CodeShell.ServerAddress": {
           "description": "The address of the CodeShell server to connect to.",
-          "default": "http://127.0.0.1:8080",
+          "default": "http://127.0.0.1:81",
           "type": "string",
           "order": 1
         },
-        "CodeShell.RunEnvForLLMs": {
-          "description": "The environment that should be used for running LLMs.",
-          "default": "CPU with llama.cpp",
+        "CodeShell.LLMModel": {
+          "description": "The model that should be used from fastchat api.",
+          "default": "Qwen-14B-Chat",
           "enum": [
-            "CPU with llama.cpp",
-            "GPU with TGI toolkit"
+            "Qwen-14B-Chat",
+            "Baichuan2-13B-Chat"
           ],
           "type": "string",
           "order": 2
@@ -79,12 +79,14 @@
           "description": "Maximum number of tokens for which chat messages will be displayed",
           "type": "number",
           "enum": [
+            256,
+            512,
             1024,
             2048,
             4096,
             8192
           ],
-          "default": 2048,
+          "default": 512,
           "order": 9
         }
       }

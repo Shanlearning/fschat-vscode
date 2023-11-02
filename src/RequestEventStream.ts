@@ -9,7 +9,7 @@ export async function stopEventStream() {
     abortController.abort();
 }
 
-export async function postEventStream(prompt: string, msgCallback: (data: string) => any, doneCallback: () => void, errorCallback: (err: any) => void) {
+export async function postEventStream(prompt:  Array<{}>, msgCallback: (data: string) => any, doneCallback: () => void, errorCallback: (err: any) => void) {
     const serverAddress = workspace.getConfiguration("CodeShell").get("ServerAddress") as string;
     const maxtokens = workspace.getConfiguration("CodeShell").get("ChatMaxTokens") as number;
     const modelname = workspace.getConfiguration("CodeShell").get("LLMModel") as string;
@@ -21,10 +21,11 @@ export async function postEventStream(prompt: string, msgCallback: (data: string
 
     console.log(modelname)
     console.log(serverAddress + uri)
+    console.log(prompt)
 
     body = {
         "model": modelname,
-        "messages": [{ "role": 'user', "content": prompt }],
+        "messages": prompt,
         "max_tokens": maxtokens,
         "stream": true
     };

@@ -1,7 +1,6 @@
 import { ExtensionContext } from "vscode";
 
 export class ChatMessage {
-    prefix?: string;
     content: string;
 
     constructor(content: string) {
@@ -9,21 +8,18 @@ export class ChatMessage {
     }
 
     toString(): string {
-        return `${this.prefix}${this.content}`;
+        return `${this.content}`;
     }
 }
 
 export class HumanMessage extends ChatMessage {
-    prefix = "## human:";
+
 }
 
 export class AIMessage extends ChatMessage {
-    prefix = "## assistant:";
 
     append(text: string) {
         this.content += text;
-        this.content = this.content.replace("|end|", "");
-        this.content = this.content.replace("|<end>|", "");
         this.content = this.content.replace("<|endoftext|>", "");
     }
 }
@@ -37,9 +33,6 @@ export class ChatItem {
         this.aiMessage = aiMessage;
     }
 
-    toString(): string {
-        return `${this.humanMessage.toString()}|<end>|${this.aiMessage.toString()}`;
-    }
 }
 
 export class SessionItem {
@@ -66,15 +59,14 @@ export class SessionItem {
     }
 
     getSlicePrompt(start:number, end:number) {
-        let history = "";
+        let history = Array<{}>();
         for (let i = start; i <= end; i++) {
             const chatItem = this.chatList[i];
-            if (history.length > 0) {
-                history += "\n";
+            if (chatItem.humanMessage.toString() !== ""){
+                history.push( { "role": 'user', "content": chatItem.humanMessage.toString() } );
             }
-            history += chatItem.toString();
-            if (i < end) {
-                history += "|<end>|";
+            if (chatItem.aiMessage.toString() !== ""){
+                history.push( { "role": 'assistant', "content": chatItem.aiMessage.toString() } );
             }
         }
         return history;
